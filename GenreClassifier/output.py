@@ -19,25 +19,29 @@ class GUI:
         
         self.lbl2 = Label(master, text="Enter The Plot:")
         
-        self.t1=Entry(bd=3, width=25)
+        self.t1=Entry(bd=3, width=40)
         
-        self.t2 = Entry(bd=3, width = 40)
+        self.t2 = Entry(bd=3, width=40)
         
-        self.predict_button = Button(master, text="Predict Genre", command=self.predict)
+        self.predict_button = Button(master, text="Predict Genre", command=self.predict, width = 10)
         
-        #self.close_button = Button(master, text="Close", command=master.quit)
+        self.clear_button = Button(master, text="Clear", command=self.clear, width = 10)
         
         self.lbl1.grid(row = 0, column = 0, sticky = W, padx = 5, pady = 5)
-        self.t1.grid(row=0, column=1, sticky = W, padx = 5, pady = 5)
+        self.t1.grid(row=0, column=1, sticky = NW, padx = 5, pady = 5)
         self.lbl2.grid(row = 1, column = 0, sticky = W, padx = 5, pady = 5)
         self.t2.grid(row=1, column=1, sticky = W, padx = 5, pady = 5)
-        self.predict_button.grid(row=2, column=0,padx = 5, pady = 5, columnspan = 2)
-       # self.close_button.grid(row=2, column=1, padx = 5, pady = 5)
+        self.predict_button.grid(row=2, column=0,padx = 5, pady = 5)
+        self.clear_button.grid(row=2, column=1, padx = 5, pady = 5)
 
 
     def predict(self):
         movie_plot=str(self.t2.get())
         predict_genre(movie_plot, pipe_dict)
+        
+    def clear(self):
+        self.t1.delete(0, 'end')
+        self.t2.delete(0, 'end')
 
 root = Tk()
 my_gui = GUI(root)
