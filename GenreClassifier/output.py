@@ -13,6 +13,7 @@ import pandas as pd
 from tkmagicgrid import MagicGrid
 import io
 import csv
+import wikipediaapi
 
 #movie_plot = """ 
 #Professional rock climber Alex Honnold attempts to conquer the first free solo climb of famed El Capitan's 900-metre vertical rock face at Yosemite National Park.
@@ -32,20 +33,25 @@ class GUI:
         
         self.t2 = Entry(bd=3, width=40)
         
+        self.display_plot = Button(master, text="Search plot", command=self.display_plot, width = 13)
+        
         self.predict_button = Button(master, text="Predict Genre", command=self.predict, width = 13, foreground = "blue")
         
         self.display_DB_button = Button(master, text="Display Data Base", command=self.display_db, width = 13, foreground = "green")
         
         self.clear_button = Button(master, text="Clear", command=self.clear, width = 13, foreground = "red")
         
+        self.show_auc_scores = Button(master, text="Show AUC scores", command=self.plot_auc_scores, width = 13, foreground = "yellow")
+        
         self.lbl1.grid(row = 0, column = 0, sticky = W, padx = 5, pady = 5)
         self.t1.grid(row=0, column=1, sticky = NW, padx = 5, pady = 5)
         self.lbl2.grid(row = 1, column = 0, sticky = W, padx = 5, pady = 5)
         self.t2.grid(row=1, column=1, sticky = W, padx = 5, pady = 5)
+        self.display_plot.grid(row=1, column=2,padx = 5, pady = 5)
         self.predict_button.grid(row=2, column=0,padx = 5, pady = 5)
         self.display_DB_button.grid(row=2, column=1, padx = 5, pady = 5)
         self.clear_button.grid(row=3, column=0,  padx = 5, pady = 5)
-
+        self.show_auc_scores.grid(row=3, column=1,  padx = 5, pady = 5)
 
     def predict(self):
         self.newWindow = tk.Toplevel(self.master)
@@ -59,6 +65,23 @@ class GUI:
         global temp_df
         movie_genre = temp_df['genre'].iloc[6]
         self.app = Display_DB(self.newWindow, movie_name, movie_genre)
+        
+    def display_plot(self):
+        movie_name = str(self.t1.get())
+        wiki_wiki = wikipediaapi.Wikipedia('en')
+        page = wiki_wiki.page(movie_name)
+        def print_sections(sections):
+            for i in sections:
+                if (i.title=="Plot"):
+                    self.t2.insert(0,i.text[0:])
+                     #print(i.text[0:])
+
+        print_sections(page.sections)
+    
+    def plot_auc_scores(self):
+        self.newWindow = tk.Toplevel(self.master)
+        self.app = AUC_Graph(self.newWindow)
+        
         
     def clear(self):
         self.t1.delete(0, 'end')
@@ -86,6 +109,21 @@ class Graph:
          bar1.get_tk_widget().grid(column=0, row=0)
          data.plot(x='genre', y='proba', kind='barh', legend=True, ax=ax1)
 
+class AUC_Graph:
+    def __init__(self,master):
+        self.master = master
+        master.title("Average AUC Score Graph")
+        resultset = pd.read_csv('D:/GenreClassifier/results.csv' ,low_memory=False, dtype = str)
+        x = ['MNB','SGDC','LR','RF']
+        y = [resultset['multi_nb'][13],resultset['sgdc'][13],resultset['logi_regre'][13],resultset['random_f'][13]]
+        data = pd.DataFrame({'classifiers': x, 'auc_average': y,})
+        data.auc_average= pd.to_numeric(data.auc_average)
+        figure1 = plt.Figure(figsize=(9,6), dpi=100)
+        ax1 = figure1.add_subplot(111)
+        bar1 = FigureCanvasTkAgg(figure1, self.master)
+        bar1.get_tk_widget().grid(column=0, row=0)
+        data.plot(x='classifiers', y='auc_average', kind='bar',color='green', legend=True, ax=ax1)
+
 class Display_DB:
     def __init__(self,master,movie_name,movie_genre):
         self.master = master
@@ -112,7 +150,7 @@ class Display_DB:
 def main(): 
     root = tk.Tk()
     app = GUI(root)
-    root.geometry("390x195+10+10")
+    root.geometry("500x185+10+10")
     root.mainloop()
 
 if __name__ == '__main__':
